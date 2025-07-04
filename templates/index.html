@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema Vetorial Tridimensional</title>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        body {
+            font-family: Helvetica, sans-serif;
+            background-color: #edf6f9;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #b8dedc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+        }
+        header img {
+            height: 60px;
+        }
+        header h1 {
+            flex: 1;
+            text-align: left;
+            font-size: 25px;
+            color: #FFFFFF;
+            /*color: #EDF6F9;*/
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .filtros, .grafico {
+            background-color: white;
+            border-radius: 8px;
+            margin: 10px;
+            padding: 20px;
+        }
+
+        .filtros {
+            width: 300px;
+        }
+
+        .grafico {
+            flex: 1;
+            min-width: 620px;
+            background-color: #f8f9fa;
+            flex-wrap: nowrap; /* manter lado a lado, não empilhar */
+            display: flex;
+             gap: 20px; /* espaço entre gráfico e texto */
+        }
+
+        .grafico > #grafico-container {
+            flex: 1 1 60%;  /* ocupar 60% do espaço disponível */
+            min-width: 300px; /* evitar que fique muito pequeno */
+        }
+
+        .grafico > p {
+            flex: 1 1 35%; /* ocupar 35% do espaço disponível */
+            font-size: 14px;
+            color: #333;
+            margin-top: 0; /* remove a margem top para ficar alinhado verticalmente */
+        }
+
+        .angulos {
+            margin-top: 20px;
+            color: gray;
+        }
+
+        #gif-container {
+            margin: 20px auto;
+            width: 90%;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        #gif-container > div {
+            flex: 1;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="{{ url_for('static', filename='assets/logo-sistema.png') }}" alt="Logo Sistema">
+    <h1>SISTEMA VETORIAL TRIDIMENSIONAL DA TRANSIÇÃO ENERGÉTICA JUSTA</h1>
+    <a href="https://lecos.ufc.br/pt/pagina-de-introducao/m" target="_blank">
+        <img src="{{ url_for('static', filename='assets/logo-lecos.png') }}" alt="Logo LECOS">
+    </a>
+</header>
+
+<div class="container">
+
+    <div class="filtros">
+        <form id="filtros-form">
+            <label for="estado">Estado:</label>
+            <select name="estado" id="estado">
+                {% for est in estados %}
+                    <option value="{{ est }}">{{ est }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="ano">Ano:</label>
+            <select name="ano" id="ano">
+                {% for a in anos %}
+                    <option value="{{ a }}">{{ a }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Atualizar</button>
+        </form>
+
+        <div class="angulos" id="angulos"></div>
+    </div>
+
+    <div class="grafico">
+        <div id="grafico-container">Carregue um gráfico selecionando Estado e Ano.</div>
+        <p style="font-size: 14px; color: #333; margin-top: 15px;">
+            O gráfico mostra os vetores ideal e real para o estado selecionado em relação às dimensões: Equidade, Segurança e Ambiental. Projeções e ângulos ajudam a interpretar o desempenho do estado frente ao vetor ideal.
+        </p>
+    </div>
+
+</div>
+
+<div id="gif-container">
+    <div style="text-align: center;">
+        <select id="gif-select">
+            {% for est in estados %}
+                <option value="{{ est }}">{{ est }}</option>
+            {% endfor %}
+        </select>
+        <img id="gif-image" src="">
+    </div>
+    <div>
+        <h3>Visualização Animada do Movimento dos Vetores</h3>
+        <p>Nesta seção é possível observar, através de GIFs, o movimento dos vetores de cada estado, permitindo visualizar para qual dimensão o estado está priorizando.</p>
+        <p>Selecione o estado ao lado para ver a animação correspondente.</p>
+    </div>
+</div>
+
+<script>
+    document.getElementById("filtros-form").onsubmit = async function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const res = await fetch("/grafico", { method: "POST", body: formData });
+        const data = await res.json();
+        console.log("Conteúdo do gráfico HTML:", data.grafico);
+    
+
+        //document.getElementById("grafico-container").innerHTML = data.grafico;
+        const container = document.getElementById("grafico-container");
+        container.innerHTML = "";
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = data.grafico;
+
+        // Adiciona o gráfico (div do Plotly)
+        const plotDiv = wrapper.querySelector(".plotly-graph-div");
+        if (plotDiv) {
+            container.appendChild(plotDiv);
+        }
+
+        // Executa todos os <script> do HTML retornado
+        wrapper.querySelectorAll("script").forEach((oldScript) => {
+            const newScript = document.createElement("script");
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+        });
+
+        const angDiv = document.getElementById("angulos");
+        angDiv.innerHTML = Object.entries(data)
+            .filter(([k]) => k.startsWith("angulo"))
+            .map(([_, v]) => `<p>${v}</p>`).join("");
+
+        
+    };
+
+    document.getElementById("gif-select").onchange = async function () {
+        const estado = this.value;
+        const res = await fetch(`/gif/${estado}`);
+        const data = await res.json();
+        document.getElementById("gif-image").src = data.src;
+    };
+
+    // Inicializa com valores padrão
+    window.onload = () => {
+        document.getElementById("filtros-form").dispatchEvent(new Event("submit"));
+        document.getElementById("gif-select").dispatchEvent(new Event("change"));
+    };
+</script>
+
+</body>
+</html>
