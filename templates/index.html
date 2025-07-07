@@ -11,6 +11,8 @@
             margin: 0;
             padding: 0;
         }
+
+        /* Cabelalho do topo */
         header {
             background-color: #b8dedc;
             display: flex;
@@ -37,6 +39,7 @@
             padding: 20px;
         }
 
+         /* Caixa dos filtros  */
         .filtros, .grafico {
             background-color: white;
             border-radius: 8px;
@@ -48,13 +51,14 @@
             width: 300px;
         }
 
+         /* Caixa dos gráficos */
         .grafico {
             flex: 1;
             min-width: 620px;
             background-color: #f8f9fa;
             flex-wrap: nowrap; /* manter lado a lado, não empilhar */
             display: flex;
-             gap: 20px; /* espaço entre gráfico e texto */
+            gap: 20px; /* espaço entre gráfico e texto */
         }
 
         .grafico > #grafico-container {
@@ -67,6 +71,54 @@
             font-size: 14px;
             color: #333;
             margin-top: 0; /* remove a margem top para ficar alinhado verticalmente */
+        }
+
+         /* Estilização do texto lateral do gráfico */
+        .texto-grafico {
+            width: 100%;
+            /* margin-top: 0px; */
+            background-color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 550px;
+        }
+
+        .texto-grafico .header {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .texto-grafico p {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Estilização do texto lateral do gif */
+        .texto-grafico-gif {
+            width: 100%;
+            /* margin-top: 0px; */
+            background-color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 700px;
+        }
+
+        .texto-grafico-gif .header {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .texto-grafico-gif p {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            margin: 0;
         }
 
         .angulos {
@@ -86,6 +138,8 @@
 
         #gif-container > div {
             flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         select, button {
@@ -116,20 +170,20 @@
     <div class="filtros">
         <form id="filtros-form">
             <label for="estado">Estado:</label>
-            <select name="estado" id="estado">
+            <select name="estado" id="estado" onchange="atualizarGrafico()">
                 {% for est in estados %}
                     <option value="{{ est }}">{{ est }}</option>
                 {% endfor %}
             </select>
 
             <label for="ano">Ano:</label>
-            <select name="ano" id="ano">
+            <select name="ano" id="ano" onchange="atualizarGrafico()">
                 {% for a in anos %}
                     <option value="{{ a }}">{{ a }}</option>
                 {% endfor %}
             </select>
 
-            <button type="submit">Atualizar</button>
+            <!-- <button type="submit">Atualizar</button> -->
         </form>
 
         <div class="angulos" id="angulos"></div>
@@ -137,23 +191,38 @@
 
     <div class="grafico">
         <div id="grafico-container">Carregue um gráfico selecionando Estado e Ano.</div>
-        <p style="font-size: 14px; color: #333; margin-top: 15px;">
-            O gráfico mostra os vetores ideal e real para o estado selecionado em relação às dimensões: Equidade, Segurança e Ambiental. Projeções e ângulos ajudam a interpretar o desempenho do estado frente ao vetor ideal.
-        </p>
+        <div class="texto-grafico">
+            <h2 class="header">Descrição do Gráfico</h2>
+            <p style="font-size: 14px; color: #333; margin-top: 15px;">
+                O vetor em azul representa o equilibrio entre as dimensões onde as coordenadas desse vetor é (10,10,10), isso significa que o estado teria o valor máximo do trilema nas três dimnesões.
+            </p>
+            <p style="font-size: 14px; color: #333; margin-top: 15px;">
+                Os vetores da cor preto representam as projeções do vetor ideal da cor azul em cima de cada eixo. Os pontos de cada vetor ideal são ligados entre si através de uma figura, que é uma representação do equilibrio entre as dimensões.
+            </p>
+            <p style="font-size: 14px; color: #333; margin-top: 15px;">
+                Os pontos de cada vetor ideal são ligados entre si através de uma figura, que é uma representação do equilibrio entre as dimensões.
+            </p>
+            <p style="font-size: 14px; color: #333; margin-top: 15px;">
+                O vetor da cor vermelho representa a situação em cada dimensão do estado selecionado, onde cada coordenada do vetor vai indicar qual dimensão esta sendo priorizada.
+            </p>
+            <p style="font-size: 14px; color: #333; margin-top: 15px;">
+                Os vetores da cor amarela representam as projeções do vetor vermelho em cima de cada eixo. Os pontos de cada vetor são ligados entre si através da figura vermelha, que é uma representação da condição atual do estado em relação as dimensões.
+            </p>
+        </div>
     </div>
 
 </div>
 
 <div id="gif-container">
     <div style="text-align: center;">
+        <img id="gif-image" src="">
+    </div>
+    <div class="texto-grafico-gif">
         <select id="gif-select">
             {% for est in estados %}
                 <option value="{{ est }}">{{ est }}</option>
             {% endfor %}
         </select>
-        <img id="gif-image" src="">
-    </div>
-    <div>
         <h3>Visualização Animada do Movimento dos Vetores</h3>
         <p>Nesta seção é possível observar, através de GIFs, o movimento dos vetores de cada estado, permitindo visualizar para qual dimensão o estado está priorizando.</p>
         <p>Selecione o estado ao lado para ver a animação correspondente.</p>
@@ -207,6 +276,53 @@
         const data = await res.json();
         document.getElementById("gif-image").src = data.src;
     };
+
+    // Atualizar o Gráfico
+    async function atualizarGrafico() {
+        const form = document.getElementById("filtros-form");
+        const formData = new FormData(form);
+        const res = await fetch("/grafico", { method: "POST", body: formData });
+        const data = await res.json();
+
+        const container = document.getElementById("grafico-container");
+        container.innerHTML = "";
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = data.grafico;
+
+        const plotDiv = wrapper.querySelector(".plotly-graph-div");
+        if (plotDiv) {
+            container.appendChild(plotDiv);
+        }
+
+        wrapper.querySelectorAll("script").forEach((oldScript) => {
+            const newScript = document.createElement("script");
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+        });
+
+        const angDiv = document.getElementById("angulos");
+        angDiv.innerHTML = Object.entries(data)
+            .filter(([k]) => k.startsWith("angulo"))
+            .map(([_, v]) => `<p>${v}</p>`).join("");
+    }
+
+    document.getElementById("gif-select").onchange = async function () {
+        const estado = this.value;
+        const res = await fetch(`/gif/${estado}`);
+        const data = await res.json();
+        document.getElementById("gif-image").src = data.src;
+    };
+
+    window.onload = () => {
+        atualizarGrafico();
+        document.getElementById("gif-select").dispatchEvent(new Event("change"));
+    };
+
 
     // Inicializa com valores padrão
     window.onload = () => {
