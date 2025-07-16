@@ -2,6 +2,7 @@ import numpy as np
 import plotly.graph_objects as go
 import data as dt
 
+
 df_ambiental = dt.tratamento_ambiental()
 df_seguranca = dt.tratamento_seguranca()
 df_equidade = dt.tratamento_equidade()
@@ -77,7 +78,15 @@ def gerar_grafico(estado, ano):
 
     eixo_x, eixo_y, eixo_z = [1,0,0], [0,1,0], [0,0,1]
 
+    def formatar_vetor(vetor):
+        return f"(x={vetor[0]:.4f}, y={vetor[1]:.4f}, z={vetor[2]:.4f})"
+
+    vetor_ideal_fmt = formatar_vetor(ideal)
+    vetor_gen_fmt = formatar_vetor(gen)
+
     return fig.to_html(full_html=False, include_plotlyjs='cdn'), {
+        "vetor_ideal": f"Ideal: {vetor_ideal_fmt}",
+        "vetor_real": f"Estado: {vetor_gen_fmt}",
         "angulo_ideal_x": f"Eixo X: {angulo(ideal, eixo_x):.2f}°",
         "angulo_ideal_y": f"Eixo Y: {angulo(ideal, eixo_y):.2f}°",
         "angulo_ideal_z": f"Eixo Z: {angulo(ideal, eixo_z):.2f}°",
@@ -89,3 +98,67 @@ def gerar_grafico(estado, ano):
         "angulo_ambiental_equidade": f"Ambiental e equidade: {np.degrees(np.arctan2(ambiental, equidade)):.2f}°",
         "angulo_seguranca_equidade": f"Segurança e equidade: {np.degrees(np.arctan2(seguranca, equidade)):.2f}°",
     }
+
+
+# função para gerar os vetores dos estados com os mesmo valor de trilema
+
+def gerar_grafico_comparativo_estados(valor, estados):
+    df_eq = dt.tratamento_equidade()
+    df_am = dt.tratamento_ambiental()
+    df_se = dt.tratamento_seguranca()
+
+    # Obter os vetores de cada estado (soma das dimensões mais recentes)
+    vetores = []
+    for estado in estados:
+        eq = df_eq[df_eq["Estado"] == estado].sort_values("Ano", ascending=False).iloc[0]["Escala"]
+        am = df_am[df_am["Estado"] == estado].sort_values("Ano", ascending=False).iloc[0]["Escala"]
+        se = df_se[df_se["Estado"] == estado].sort_values("Ano", ascending=False).iloc[0]["Escala"]
+        vetor = [eq, se, am]
+        vetores.append((estado, vetor))
+
+    fig = go.Figure()
+
+    cores = ['red', 'green']  # até 2 estados
+
+    for i, (estado, vetor) in enumerate(vetores):
+        fig.add_trace(go.Scatter3d(
+            x=[0, vetor[0]], y=[0, vetor[1]], z=[0, vetor[2]],
+            mode='lines+markers',
+            line=dict(color=cores[i], width=5),
+            marker=dict(size=4),
+            name=f"{estado}"
+        ))
+
+        # Projeções
+        fig.add_trace(go.Scatter3d(x=[0, vetor[0]], y=[0, 0], z=[0, 0], line=dict(color=cores[i], width=3), mode='lines+markers', marker=dict(size=3), name=f'Equidade {estado}'))
+        fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, vetor[1]], z=[0, 0], line=dict(color=cores[i], width=3), mode='lines+markers', marker=dict(size=3), name=f'Segurança {estado}'))
+        fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, vetor[2]], line=dict(color=cores[i], width=3), mode='lines+markers', marker=dict(size=3), name=f'Ambiental {estado}'))
+
+        # Superfície do vetor
+        def extrair_v(v): return ([v[0], 0, 0], [0, v[1], 0], [0, 0, v[2]])
+        def xyz(vlist): return [list(coord) for coord in zip(*vlist)]
+
+        pts = extrair_v(vetor)
+        x, y, z = xyz(pts)
+        fig.add_trace(go.Mesh3d(
+            x=x, y=y, z=z,
+            i=[0], j=[1], k=[2],
+            opacity=0.4,
+            color=cores[i],
+            name=f'Superfície {estado}'
+        ))
+
+    # Layout
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(range=[0, 10], title='Equidade'),
+            yaxis=dict(range=[0, 10], title='Segurança'),
+            zaxis=dict(range=[0, 10], title='Ambiental'),
+            bgcolor="rgba(0,0,0,0)"
+        ),
+        title=f"Comparação vetorial dos estados: {estados[0]} x {estados[1]}",
+        height=700,
+        width=900
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs='cdn')
