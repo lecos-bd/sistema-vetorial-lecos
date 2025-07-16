@@ -163,6 +163,10 @@
     <a href="https://lecos.ufc.br/pt/pagina-de-introducao/m" target="_blank">
         <img src="{{ url_for('static', filename='assets/logo-lecos.png') }}" alt="Logo LECOS">
     </a>
+   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 </header>
 
 <div class="container">
@@ -228,6 +232,12 @@
         <p>Selecione o estado ao lado para ver a animação correspondente.</p>
     </div>
 </div>
+
+<div class="container mt-5">
+    <h2>Estados com valores iguais</h2>
+    <iframe id="iframe-tabela" src="/tabela_valores" width="100%" style="border: none;"></iframe>
+</div>
+
 
 <script>
     document.getElementById("filtros-form").onsubmit = async function (e) {
@@ -329,6 +339,16 @@
         document.getElementById("filtros-form").dispatchEvent(new Event("submit"));
         document.getElementById("gif-select").dispatchEvent(new Event("change"));
     };
+</script>
+
+<script>
+    // Ajustar altura automaticamente com base no conteúdo interno do iframe
+    window.addEventListener("message", function (event) {
+        if (event.data.type === "ajustarAltura") {
+            const iframe = document.getElementById("iframe-tabela");
+            iframe.style.height = event.data.altura + "px";
+        }
+    });
 </script>
 
 </body>
