@@ -158,7 +158,7 @@ def gerar_grafico_comparativo_estados(valor, estados):
         ),
         title=f"Comparação vetorial dos estados: {estados[0]} x {estados[1]}",
         height=700,
-        width=900
+        width=1000
     )
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn')
