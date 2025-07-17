@@ -153,6 +153,11 @@
             max-width: 100%;
             border-radius: 8px;
         }
+        #gif-image {
+            width: 600px;
+            height: 600px;
+            margin: auto;
+        }
     </style>
 </head>
 <body>
@@ -234,7 +239,7 @@
 </div>
 
 <div class="container mt-5">
-    <h2>Estados com valores iguais</h2>
+    
     <iframe id="iframe-tabela" src="/tabela_valores" width="100%" style="border: none;"></iframe>
 </div>
 
@@ -247,7 +252,7 @@
         const data = await res.json();
         console.log("Conteúdo do gráfico HTML:", data.grafico);
     
-
+        // <h2>Estados com valores iguais</h2>
         //document.getElementById("grafico-container").innerHTML = data.grafico;
         const container = document.getElementById("grafico-container");
         container.innerHTML = "";
