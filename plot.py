@@ -96,27 +96,27 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
 
     # Layout
     fig.update_layout(
-        scene=dict(
-            xaxis=dict(range=[0, 10], title='Equidade - eixo x'),
-            yaxis=dict(range=[0, 10], title='Segurança - eixo y'),
-            zaxis=dict(range=[0, 10], title='Ambiental - eixo z'),
-            bgcolor="rgba(0,0,0,0)"
-        ),
-        title="Comparação de Vetores Trilema",
-        height=700,
-        width=900,  # mantém o tamanho original
-        showlegend=True,
-        legend=dict(
-            x=0,
-            y=0,
-            xanchor="left",
-            yanchor="bottom",
-            font=dict(size=10),
-            bgcolor='rgba(255,255,255,0.5)',
-            bordercolor='gray',
-            borderwidth=1
-        ),
-        margin=dict(l=0, r=0, t=40, b=0)
+    scene=dict(
+        xaxis=dict(range=[0, 10], title='Equidade - eixo x'),
+        yaxis=dict(range=[0, 10], title='Segurança - eixo y'),
+        zaxis=dict(range=[0, 10], title='Ambiental - eixo z'),
+        bgcolor="rgba(0,0,0,0)"
+    ),
+    title="Comparação de Vetores Trilema",
+    height=700,
+    width=900,  # mantém o tamanho original
+    showlegend=True,
+    legend=dict(
+        x=0,
+        y=0,
+        xanchor="left",
+        yanchor="bottom",
+        font=dict(size=10),
+        bgcolor='rgba(255,255,255,0.5)',
+        bordercolor='gray',
+        borderwidth=1
+    ),
+    margin=dict(l=0, r=0, t=40, b=0)
     )
 
     # Cálculo de ângulos
@@ -182,13 +182,25 @@ def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
     ))
 
     fig.update_layout(
-        polar=dict(radialaxis = dict(visible=True, range=[0, 10])),
-        showlegend=True,
-        title="Comparação Trilema (Radar 2D)",
-        width=900,  # máximo do CSS
-        height=725,
-        autosize=False,
-        margin=dict(l=20, r=20, t=40, b=20)
+    polar=dict(
+        radialaxis=dict(visible=True, range=[0, 10])
+    ),
+    showlegend=True,
+    title="Comparação Trilema (Radar 2D)",
+    width=900,
+    height=725,
+    autosize=False,
+    margin=dict(l=20, r=180, t=40, b=20),
+    legend=dict(
+        x=1.02,
+        y=1,
+        xanchor="left",
+        yanchor="bottom",
+        font=dict(size=10),
+        bgcolor='rgba(255,255,255,0.5)',
+        bordercolor='gray',
+        borderwidth=1
     )
+)
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn')
