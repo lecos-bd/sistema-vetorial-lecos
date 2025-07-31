@@ -104,7 +104,7 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         ),
         title="Comparação de Vetores Trilema",
         height=700,
-        width=725,
+        width=900,
         showlegend=True
     )
 
@@ -174,7 +174,7 @@ def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
         polar=dict(radialaxis = dict(visible=True, range=[0, 10])),
         showlegend=True,
         title="Comparação Trilema (Radar 2D)",
-        width=700,  # máximo do CSS
+        width=900,  # máximo do CSS
         height=725,
         autosize=False,
         margin=dict(l=20, r=20, t=40, b=20)
