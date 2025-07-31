@@ -2,163 +2,182 @@ import numpy as np
 import plotly.graph_objects as go
 import data as dt
 
-
 df_ambiental = dt.tratamento_ambiental()
 df_seguranca = dt.tratamento_seguranca()
 df_equidade = dt.tratamento_equidade()
 
-def gerar_grafico(estado, ano):
-    # Filtrar os dados
-    df_ambiental_filt = df_ambiental[(df_ambiental['Estado'] == estado) & (df_ambiental['Ano'] == ano)]
-    df_seguranca_filt = df_seguranca[(df_seguranca['Estado'] == estado) & (df_seguranca['Ano'] == ano)]
-    df_equidade_filt = df_equidade[(df_equidade['Estado'] == estado) & (df_equidade['Ano'] == ano)]
+def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
+    def obter_vetor(estado, ano):
+        eq = df_equidade[(df_equidade['Estado'] == estado) & (df_equidade['Ano'] == ano)]['Escala'].sum() or 0
+        am = df_ambiental[(df_ambiental['Estado'] == estado) & (df_ambiental['Ano'] == ano)]['Escala'].sum() or 0
+        se = df_seguranca[(df_seguranca['Estado'] == estado) & (df_seguranca['Ano'] == ano)]['Escala'].sum() or 0
+        return [eq, se, am]
 
-    # Somar e tratar valores nulos
-    equidade = df_equidade_filt['Escala'].sum() or 0
-    ambiental = df_ambiental_filt['Escala'].sum() or 0
-    seguranca = df_seguranca_filt['Escala'].sum() or 0
-
-    # Verificação de depuração
-    print(f"[gerar_grafico] {estado=} {ano=} => E:{equidade}, S:{seguranca}, A:{ambiental}")
-
-    # Vetores
-    start = [0, 0, 0]
     ideal = [10, 10, 10]
-    gen = [equidade, seguranca, ambiental]
+    vetor1 = obter_vetor(estado1, ano1)
+    vetor2 = obter_vetor(estado2, ano2) if estado2 and ano2 else None
+
+    def gerar_tetraedro(nome, cor, vetor, opacidade=0.6):
+        base = np.array([[0,0,0], [vetor[0],0,0], [0,vetor[1],0], [0,0,vetor[2]]])
+        faces = [[0,1,2], [0,1,3], [0,2,3], [1,2,3]]
+        x, y, z = base[:,0], base[:,1], base[:,2]
+
+        # Tetraedro
+        mesh = go.Mesh3d(
+            x=x, y=y, z=z,
+            i=[f[0] for f in faces],
+            j=[f[1] for f in faces],
+            k=[f[2] for f in faces],
+            color=cor,
+            opacity=opacidade,
+            name=nome,
+            hoverinfo='name',
+            showscale=False
+        )
+
+        # Vértices (sem origem)
+        x_filt, y_filt, z_filt, hovers = [], [], [], []
+        for i in range(len(x)):
+            if not (x[i] == 0 and y[i] == 0 and z[i] == 0):
+                x_filt.append(x[i])
+                y_filt.append(y[i])
+                z_filt.append(z[i])
+                hovers.append(f"{nome}<br>x={x[i]:.2f}, y={y[i]:.2f}, z={z[i]:.2f}")
+
+        pontos = go.Scatter3d(
+            x=x_filt, y=y_filt, z=z_filt,
+            mode='markers+text',
+            marker=dict(size=4, color=cor),
+            hovertext=hovers,
+            hoverinfo='text',
+            name=f"Vértices {nome}"
+        )
+
+        return [mesh, pontos]
 
     fig = go.Figure()
 
-    # Vetores principais
+    # Tetraedro Ideal
+    for trace in gerar_tetraedro("Ideal", "lightgray", ideal, opacidade=0.245):
+        fig.add_trace(trace)
+
+    # Estado 1
+    for trace in gerar_tetraedro(f"{estado1} {ano1}", "red", vetor1, opacidade=0.3):
+        fig.add_trace(trace)
+
+    # Texto com coordenadas do vetor 1
     fig.add_trace(go.Scatter3d(
-        x=[0, gen[0]], y=[0, gen[1]], z=[0, gen[2]],
-        mode='lines+markers', line=dict(color='red', width=5),
-        marker=dict(size=4), name='Vetor do Trilema do Estado'))
+        x=[vetor1[0]],
+        y=[vetor1[1]],
+        z=[vetor1[2]],
+        mode='text',
+        text=[f"{estado1} {ano1}<br>x: {vetor1[0]:.6f}<br>y: {vetor1[1]:.6f}<br>z: {vetor1[2]:.6f}"],
+        textposition='top right',
+        textfont=dict(color='black', size=12),
+        name=f"Coordenadas {estado1}"
+    ))
 
-    fig.add_trace(go.Scatter3d(
-        x=[0, ideal[0]], y=[0, ideal[1]], z=[0, ideal[2]],
-        mode='lines+markers', line=dict(color='blue', width=5),
-        marker=dict(size=4), name='Vetor do Trilema Ideal'))
+    # Estado 2 (opcional)
+    if vetor2:
+        for trace in gerar_tetraedro(f"{estado2} {ano2}", "blue", vetor2, opacidade=0.3):
+            fig.add_trace(trace)
 
-    # Projeções - estado
-    fig.add_trace(go.Scatter3d(x=[0, gen[0]], y=[0, 0], z=[0, 0], line=dict(color='#ffba08', width=5), mode='lines+markers', marker=dict(size=4), name='Equidade Estado'))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, gen[1]], z=[0, 0], line=dict(color='#ffba08', width=5), mode='lines+markers', marker=dict(size=4), name='Segurança Estado'))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, gen[2]], line=dict(color='#ffba08', width=5), mode='lines+markers', marker=dict(size=4), name='Ambiental Estado'))
-
-    # Projeções - ideal
-    fig.add_trace(go.Scatter3d(x=[0, ideal[0]], y=[0, 0], z=[0, 0], line=dict(color='#1d3557', width=5), mode='lines+markers', marker=dict(size=4), name='Equidade Ideal'))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, ideal[1]], z=[0, 0], line=dict(color='#1d3557', width=5), mode='lines+markers', marker=dict(size=4), name='Segurança Ideal'))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, ideal[2]], line=dict(color='#1d3557', width=5), mode='lines+markers', marker=dict(size=4), name='Ambiental Ideal'))
-
-    # Superfícies
-    def extrair_v(v): return ([v[0], 0, 0], [0, v[1], 0], [0, 0, v[2]])
-    def xyz(vlist): return [list(coord) for coord in zip(*vlist)]
-
-    for v, cor in [(gen, 'red'), (ideal, 'lightblue')]:
-        pts = extrair_v(v)
-        x, y, z = xyz(pts)
-        fig.add_trace(go.Mesh3d(x=x, y=y, z=z, i=[0], j=[1], k=[2], opacity=0.5, color=cor))
+        # Texto com coordenadas do vetor 2
+        fig.add_trace(go.Scatter3d(
+            x=[vetor2[0]],
+            y=[vetor2[1]],
+            z=[vetor2[2]],
+            mode='text',
+            text=[f"{estado2} {ano2}<br>x: {vetor2[0]:.6f}<br>y: {vetor2[1]:.6f}<br>z: {vetor2[2]:.6f}"],
+            textposition='bottom left',
+            textfont=dict(color='black', size=12),
+            name=f"Coordenadas {estado2}"
+        ))
 
     # Layout
     fig.update_layout(
         scene=dict(
-            xaxis=dict(range=[0, 10], title='Equity - x'),
-            yaxis=dict(range=[0, 10], title='Security - y'),
-            zaxis=dict(range=[0, 10], title='Environmental - z'),
+            xaxis=dict(range=[0, 10], title='Equidade - eixo x'),
+            yaxis=dict(range=[0, 10], title='Segurança - eixo y'),
+            zaxis=dict(range=[0, 10], title='Ambiental - eixo z'),
             bgcolor="rgba(0,0,0,0)"
         ),
-        title=f"Vetores 3D: {estado} - {ano}",
+        title="Comparação de Vetores Trilema",
         height=700,
-        width=820
+        width=725,
+        showlegend=True
     )
 
-    # Função para calcular ângulo entre vetores
+    # Cálculo de ângulos
     def angulo(v1, v2):
         v1, v2 = np.array(v1), np.array(v2)
-        return np.degrees(np.arccos(np.clip(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)), -1.0, 1.0)))
+        return np.degrees(np.arccos(np.clip(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)), -1, 1)))
 
     eixo_x, eixo_y, eixo_z = [1,0,0], [0,1,0], [0,0,1]
-
-    def formatar_vetor(vetor):
-        return f"(x={vetor[0]:.4f}, y={vetor[1]:.4f}, z={vetor[2]:.4f})"
-
-    vetor_ideal_fmt = formatar_vetor(ideal)
-    vetor_gen_fmt = formatar_vetor(gen)
+    def formatar_vetor(v): return f"(x={v[0]:.2f}, y={v[1]:.2f}, z={v[2]:.2f})"
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn'), {
-        "vetor_ideal": f"Ideal: {vetor_ideal_fmt}",
-        "vetor_real": f"Estado: {vetor_gen_fmt}",
-        "angulo_ideal_x": f"Eixo X: {angulo(ideal, eixo_x):.2f}°",
-        "angulo_ideal_y": f"Eixo Y: {angulo(ideal, eixo_y):.2f}°",
-        "angulo_ideal_z": f"Eixo Z: {angulo(ideal, eixo_z):.2f}°",
-        "angulo_generico_x": f"Eixo X: {angulo(gen, eixo_x):.2f}°",
-        "angulo_generico_y": f"Eixo Y: {angulo(gen, eixo_y):.2f}°",
-        "angulo_generico_z": f"Eixo Z: {angulo(gen, eixo_z):.2f}°",
-        "angulo_generico_ideal": f"Angulo entre vetor genérico e ideal: {angulo(ideal, gen):.2f}°",
-        "angulo_ambiental_seguranca": f"Ambiental e segurança: {np.degrees(np.arctan2(ambiental, seguranca)):.2f}°",
-        "angulo_ambiental_equidade": f"Ambiental e equidade: {np.degrees(np.arctan2(ambiental, equidade)):.2f}°",
-        "angulo_seguranca_equidade": f"Segurança e equidade: {np.degrees(np.arctan2(seguranca, equidade)):.2f}°",
+        "vetor_ideal": f"Ideal: {formatar_vetor(ideal)}",
+        "vetor_real": f"{estado1} {ano1}: {formatar_vetor(vetor1)}",
+        "angulo_generico_ideal": f"Ângulo entre {estado1} e Ideal: {angulo(vetor1, ideal):.2f}°",
+        "angulo_generico_x": f"Ângulo com eixo X: {angulo(vetor1, eixo_x):.2f}°",
+        "angulo_generico_y": f"Ângulo com eixo Y: {angulo(vetor1, eixo_y):.2f}°",
+        "angulo_generico_z": f"Ângulo com eixo Z: {angulo(vetor1, eixo_z):.2f}°",
     }
 
+def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
+    import plotly.express as px
 
-# função para gerar os vetores dos estados com os mesmo valor de trilema
+    def obter_vetor(estado, ano):
+        eq = df_equidade[(df_equidade['Estado'] == estado) & (df_equidade['Ano'] == ano)]['Escala'].sum() or 0
+        am = df_ambiental[(df_ambiental['Estado'] == estado) & (df_ambiental['Ano'] == ano)]['Escala'].sum() or 0
+        se = df_seguranca[(df_seguranca['Estado'] == estado) & (df_seguranca['Ano'] == ano)]['Escala'].sum() or 0
+        return {"Equidade - eixo x": eq, "Segurança - eixo y": se, "Ambiental - eixo z ": am}
 
-def gerar_grafico_comparativo_estados(valor, estados):
-    df_eq = dt.tratamento_equidade()
-    df_am = dt.tratamento_ambiental()
-    df_se = dt.tratamento_seguranca()
+    vetor1 = obter_vetor(estado1, ano1)
+    vetor2 = obter_vetor(estado2, ano2) if estado2 and ano2 else None
 
-    # Obter os vetores de cada estado (soma das dimensões mais recentes)
-    vetores = []
-    for estado in estados:
-        eq = df_eq[df_eq["Estado"] == estado].sort_values("Ano", ascending=False).iloc[0]["Escala"]
-        am = df_am[df_am["Estado"] == estado].sort_values("Ano", ascending=False).iloc[0]["Escala"]
-        se = df_se[df_se["Estado"] == estado].sort_values("Ano", ascending=False).iloc[0]["Escala"]
-        vetor = [eq, se, am]
-        vetores.append((estado, vetor))
+    categorias = list(vetor1.keys())
 
     fig = go.Figure()
 
-    cores = ['red', 'green']  # até 2 estados
+    # Estado 1
+    fig.add_trace(go.Scatterpolar(
+        r=[vetor1[cat] for cat in categorias],
+        theta=categorias,
+        fill='toself',
+        name=f"{estado1} {ano1}",
+        line=dict(color='red')
+    ))
 
-    for i, (estado, vetor) in enumerate(vetores):
-        fig.add_trace(go.Scatter3d(
-            x=[0, vetor[0]], y=[0, vetor[1]], z=[0, vetor[2]],
-            mode='lines+markers',
-            line=dict(color=cores[i], width=5),
-            marker=dict(size=4),
-            name=f"{estado}"
+    # Estado 2 (se fornecido)
+    if vetor2:
+        fig.add_trace(go.Scatterpolar(
+            r=[vetor2[cat] for cat in categorias],
+            theta=categorias,
+            fill='toself',
+            name=f"{estado2} {ano2}",
+            line=dict(color='blue')
         ))
 
-        # Projeções
-        fig.add_trace(go.Scatter3d(x=[0, vetor[0]], y=[0, 0], z=[0, 0], line=dict(color=cores[i], width=3), mode='lines+markers', marker=dict(size=3), name=f'Equidade {estado}'))
-        fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, vetor[1]], z=[0, 0], line=dict(color=cores[i], width=3), mode='lines+markers', marker=dict(size=3), name=f'Segurança {estado}'))
-        fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, vetor[2]], line=dict(color=cores[i], width=3), mode='lines+markers', marker=dict(size=3), name=f'Ambiental {estado}'))
+    # Ideal
+    ideal = [10, 10, 10]
+    fig.add_trace(go.Scatterpolar(
+        r=ideal,
+        theta=categorias,
+        fill='toself',
+        name="Ideal (10,10,10)",
+        line=dict(color='lightgray', dash='dash')
+    ))
 
-        # Superfície do vetor
-        def extrair_v(v): return ([v[0], 0, 0], [0, v[1], 0], [0, 0, v[2]])
-        def xyz(vlist): return [list(coord) for coord in zip(*vlist)]
-
-        pts = extrair_v(vetor)
-        x, y, z = xyz(pts)
-        fig.add_trace(go.Mesh3d(
-            x=x, y=y, z=z,
-            i=[0], j=[1], k=[2],
-            opacity=0.4,
-            color=cores[i],
-            name=f'Superfície {estado}'
-        ))
-
-    # Layout
     fig.update_layout(
-        scene=dict(
-            xaxis=dict(range=[0, 10], title='Equidade'),
-            yaxis=dict(range=[0, 10], title='Segurança'),
-            zaxis=dict(range=[0, 10], title='Ambiental'),
-            bgcolor="rgba(0,0,0,0)"
-        ),
-        title=f"Comparação vetorial dos estados: {estados[0]} x {estados[1]}",
-        height=700,
-        width=1000
+        polar=dict(radialaxis = dict(visible=True, range=[0, 10])),
+        showlegend=True,
+        title="Comparação Trilema (Radar 2D)",
+        width=700,  # máximo do CSS
+        height=725,
+        autosize=False,
+        margin=dict(l=20, r=20, t=40, b=20)
     )
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn')

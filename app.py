@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, url_for
 import data as dt
-from plot import gerar_grafico
+from plot import gerar_grafico, gerar_grafico_radar
 import os
 
 app = Flask(__name__)
@@ -19,9 +19,12 @@ def index():
 
 @app.route("/grafico", methods=["POST"])
 def grafico():
-    estado = request.form.get("estado")
-    ano = request.form.get("ano")
-    fig_html, angulos = gerar_grafico(estado, ano)
+    estado1 = request.form.get("estado")
+    ano1 = request.form.get("ano")
+    estado2 = request.form.get("estado2")
+    ano2 = request.form.get("ano2")
+
+    fig_html, angulos = gerar_grafico(estado1, ano1, estado2, ano2)
     return jsonify({"grafico": fig_html, **angulos})
 
 @app.route("/gif/<estado>")
@@ -52,6 +55,15 @@ def tabela_valores():
     dados = dt.carregar_resultado_valores_comuns()
     return render_template("tabela_valores.html", comparacoes=dados)
 
+@app.route("/grafico_radar", methods=["POST"])
+def grafico_radar():
+    estado1 = request.form.get("estado")
+    ano1 = request.form.get("ano")
+    estado2 = request.form.get("estado2")
+    ano2 = request.form.get("ano2")
+
+    fig_html = gerar_grafico_radar(estado1, ano1, estado2, ano2)
+    return jsonify({"grafico": fig_html})
 
 if __name__ == "__main__":
     app.run(debug=True)
