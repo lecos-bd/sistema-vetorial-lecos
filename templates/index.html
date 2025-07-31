@@ -36,7 +36,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
         }
 
          /* Caixa dos filtros  */
@@ -44,7 +44,7 @@
             background-color: white;
             border-radius: 8px;
             margin: 10px;
-            padding: 20px;
+            padding: 10px;
         }
 
         .filtros {
@@ -54,16 +54,20 @@
          /* Caixa dos gráficos */
         .grafico {
             flex: 1;
-            min-width: 620px;
+            min-width: 520px;
             background-color: #f8f9fa;
             flex-wrap: nowrap; /* manter lado a lado, não empilhar */
             display: flex;
-            gap: 20px; /* espaço entre gráfico e texto */
+            gap: 10px; /* espaço entre gráfico e texto */
+            margin: auto;
+            overflow: hidden; 
         }
 
         .grafico > #grafico-container {
             flex: 1 1 60%;  /* ocupar 60% do espaço disponível */
-            min-width: 300px; /* evitar que fique muito pequeno */
+            min-width: 200px; /* evitar que fique muito pequeno */
+            margin: auto;
+            overflow: hidden; 
         }
 
         .grafico > p {
@@ -153,11 +157,6 @@
             max-width: 100%;
             border-radius: 8px;
         }
-        #gif-image {
-            width: 600px;
-            height: 600px;
-            margin: auto;
-        }
     </style>
 </head>
 <body>
@@ -177,45 +176,65 @@
 <div class="container">
 
     <div class="filtros">
-        <form id="filtros-form">
-            <label for="estado">Estado:</label>
-            <select name="estado" id="estado" onchange="atualizarGrafico()">
-                {% for est in estados %}
-                    <option value="{{ est }}">{{ est }}</option>
-                {% endfor %}
-            </select>
+    <form id="filtros-form">
+        <label for="estado">Estado 1:</label>
+        <select name="estado" id="estado" onchange="atualizarGrafico()">
+            {% for est in estados %}
+                <option value="{{ est }}">{{ est }}</option>
+            {% endfor %}
+        </select>
 
-            <label for="ano">Ano:</label>
-            <select name="ano" id="ano" onchange="atualizarGrafico()">
-                {% for a in anos %}
-                    <option value="{{ a }}">{{ a }}</option>
-                {% endfor %}
-            </select>
+        <label for="ano">Ano 1:</label>
+        <select name="ano" id="ano" onchange="atualizarGrafico()">
+            {% for a in anos %}
+                <option value="{{ a }}">{{ a }}</option>
+            {% endfor %}
+        </select>
 
-            <!-- <button type="submit">Atualizar</button> -->
-        </form>
+        <label for="estado2">Estado 2:</label>
+        <select name="estado2" id="estado2" onchange="atualizarGrafico()">
+            <option value="">(Opcional)</option>
+            {% for est in estados %}
+                <option value="{{ est }}">{{ est }}</option>
+            {% endfor %}
+        </select>
 
-        <div class="angulos" id="angulos"></div>
-    </div>
+        <label for="ano2">Ano 2:</label>
+        <select name="ano2" id="ano2" onchange="atualizarGrafico()">
+            <option value="">(Opcional)</option>
+            {% for a in anos %}
+                <option value="{{ a }}">{{ a }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="tipo-grafico">Tipo de Gráfico:</label>
+        <select id="tipo-grafico" onchange="atualizarGrafico()">
+            <option value="3d">3D</option>
+            <option value="radar">Radar (2D)</option>
+        </select>
+    </form>
+
+    <div class="angulos" id="angulos"></div>
+</div>
 
     <div class="grafico">
         <div id="grafico-container">Carregue um gráfico selecionando Estado e Ano.</div>
         <div class="texto-grafico">
             <h2 class="header">Descrição do Gráfico</h2>
             <p style="font-size: 14px; color: #333; margin-top: 15px;">
-                O vetor em azul representa o equilibrio entre as dimensões onde as coordenadas desse vetor é (10,10,10), isso significa que o estado teria o valor máximo do trilema nas três dimnesões.
+                O tetraedro maior que está na coloração cinza claro é a projeção do vetor ideal (x=10,y=10,z=10), ou seja, o estado naquele ano teria o valor máximo do trilema nas três dimnesões.
             </p>
             <p style="font-size: 14px; color: #333; margin-top: 15px;">
-                Os vetores da cor preto representam as projeções do vetor ideal da cor azul em cima de cada eixo. Os pontos de cada vetor ideal são ligados entre si através de uma figura, que é uma representação do equilibrio entre as dimensões.
+                O tetraedro vermelho é a representação do vetor referente ao estado selecionado no ano selecionado.
             </p>
             <p style="font-size: 14px; color: #333; margin-top: 15px;">
-                Os pontos de cada vetor ideal são ligados entre si através de uma figura, que é uma representação do equilibrio entre as dimensões.
+                O tetraedro azul é a representação do vetor referente ao estado e ano que, opcionalmente, podem ser selecionados.
             </p>
             <p style="font-size: 14px; color: #333; margin-top: 15px;">
-                O vetor da cor vermelho representa a situação em cada dimensão do estado selecionado, onde cada coordenada do vetor vai indicar qual dimensão esta sendo priorizada.
+                Os pontos azuis são os pontos dos vérticies referentes ao tetraedo azul, com exceção da origem do gráfico.
             </p>
             <p style="font-size: 14px; color: #333; margin-top: 15px;">
-                Os vetores da cor amarela representam as projeções do vetor vermelho em cima de cada eixo. Os pontos de cada vetor são ligados entre si através da figura vermelha, que é uma representação da condição atual do estado em relação as dimensões.
+                Os pontos vermelhos são os pontos dos vérticies referentes ao tetraedo vermelho, com exceção da origem do gráfico.
             </p>
         </div>
     </div>
@@ -239,7 +258,7 @@
 </div>
 
 <div class="container mt-5">
-    
+    <h2>Estados com valores iguais</h2>
     <iframe id="iframe-tabela" src="/tabela_valores" width="100%" style="border: none;"></iframe>
 </div>
 
@@ -252,7 +271,7 @@
         const data = await res.json();
         console.log("Conteúdo do gráfico HTML:", data.grafico);
     
-        // <h2>Estados com valores iguais</h2>
+
         //document.getElementById("grafico-container").innerHTML = data.grafico;
         const container = document.getElementById("grafico-container");
         container.innerHTML = "";
@@ -294,49 +313,38 @@
 
     // Atualizar o Gráfico
     async function atualizarGrafico() {
-        const form = document.getElementById("filtros-form");
-        const formData = new FormData(form);
-        const res = await fetch("/grafico", { method: "POST", body: formData });
-        const data = await res.json();
+    const form = document.getElementById("filtros-form");
+    const tipo = document.getElementById("tipo-grafico").value;
+    const formData = new FormData(form);
 
-        const container = document.getElementById("grafico-container");
-        container.innerHTML = "";
+    const endpoint = tipo === "radar" ? "/grafico_radar" : "/grafico";
+    const res = await fetch(endpoint, { method: "POST", body: formData });
+    const data = await res.json();
 
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = data.grafico;
+    const container = document.getElementById("grafico-container");
+    container.innerHTML = "";
 
-        const plotDiv = wrapper.querySelector(".plotly-graph-div");
-        if (plotDiv) {
-            container.appendChild(plotDiv);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = data.grafico;
+
+    const plotDiv = wrapper.querySelector(".plotly-graph-div");
+    if (plotDiv) container.appendChild(plotDiv);
+
+    wrapper.querySelectorAll("script").forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        if (oldScript.src) {
+            newScript.src = oldScript.src;
+        } else {
+            newScript.textContent = oldScript.textContent;
         }
+        document.body.appendChild(newScript);
+    });
 
-        wrapper.querySelectorAll("script").forEach((oldScript) => {
-            const newScript = document.createElement("script");
-            if (oldScript.src) {
-                newScript.src = oldScript.src;
-            } else {
-                newScript.textContent = oldScript.textContent;
-            }
-            document.body.appendChild(newScript);
-        });
-
-        const angDiv = document.getElementById("angulos");
-        angDiv.innerHTML = Object.entries(data)
-            .filter(([k]) => k.startsWith("angulo"))
-            .map(([_, v]) => `<p>${v}</p>`).join("");
-    }
-
-    document.getElementById("gif-select").onchange = async function () {
-        const estado = this.value;
-        const res = await fetch(`/gif/${estado}`);
-        const data = await res.json();
-        document.getElementById("gif-image").src = data.src;
-    };
-
-    window.onload = () => {
-        atualizarGrafico();
-        document.getElementById("gif-select").dispatchEvent(new Event("change"));
-    };
+    const angDiv = document.getElementById("angulos");
+    angDiv.innerHTML = Object.entries(data)
+        .filter(([k]) => k.startsWith("angulo"))
+        .map(([_, v]) => `<p>${v}</p>`).join("");
+}
 
 
     // Inicializa com valores padrão
