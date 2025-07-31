@@ -94,7 +94,7 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
             name=f"Coordenadas {estado2}"
         ))
 
-        # Layout
+    # Layout
     fig.update_layout(
         scene=dict(
             xaxis=dict(range=[0, 10], title='Equidade - eixo x'),
@@ -104,19 +104,19 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         ),
         title="Comparação de Vetores Trilema",
         height=700,
-        width=900,
+        width=900,  # mantém o tamanho original
         showlegend=True,
         legend=dict(
-            x=1.05,
-            y=1,
-            xanchor='left',
-            yanchor='top',
-            font=dict(size=12),
-            bgcolor='rgba(255,255,255,0.6)',
+            x=0,
+            y=0,
+            xanchor="left",
+            yanchor="bottom",
+            font=dict(size=10),
+            bgcolor='rgba(255,255,255,0.5)',
             bordercolor='gray',
             borderwidth=1
         ),
-        margin=dict(l=0, r=140, t=40, b=0)  # margem direita aumentada para a legenda
+        margin=dict(l=0, r=0, t=40, b=0)
     )
 
     # Cálculo de ângulos
