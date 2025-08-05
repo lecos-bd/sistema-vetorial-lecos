@@ -103,8 +103,9 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         bgcolor="rgba(0,0,0,0)"
     ),
     title="Comparação de Vetores Trilema",
+    width=None,
     height=700,
-    width=900,  # mantém o tamanho original
+    autosize=True, 
     showlegend=True,
     legend=dict(
         x=0,
@@ -187,9 +188,9 @@ def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
     ),
     showlegend=True,
     title="Comparação Trilema (Radar 2D)",
-    width=900,
-    height=725,
-    autosize=False,
+    width=None,
+    height=700,
+    autosize=True,
     margin=dict(l=20, r=180, t=40, b=20),
     legend=dict(
         x=1.02,
