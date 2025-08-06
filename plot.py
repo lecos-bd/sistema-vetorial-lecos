@@ -102,7 +102,16 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         zaxis=dict(range=[0, 10], title='Ambiental - eixo z'),
         bgcolor="rgba(0,0,0,0)"
     ),
-    title="Comparação de Vetores Trilema",
+    title=dict(
+        text="Comparação de Vetores Trilema",
+        font=dict(
+            family="Arial",     # ou qualquer outra fonte válida (ex: "Courier New", "Verdana")
+            size=22,            # tamanho do título
+            color="black",     # cor do texto
+        ),
+        x=0.5,                  # centraliza o título horizontalmente
+        xanchor='center',
+    ),
     width=None,
     height=700,
     autosize=True, 
@@ -126,16 +135,27 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         return np.degrees(np.arccos(np.clip(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)), -1, 1)))
 
     eixo_x, eixo_y, eixo_z = [1,0,0], [0,1,0], [0,0,1]
+    
     def formatar_vetor(v): return f"(x={v[0]:.2f}, y={v[1]:.2f}, z={v[2]:.2f})"
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn'), {
-        "vetor_ideal": f"Ideal: {formatar_vetor(ideal)}",
-        "vetor_real": f"{estado1} {ano1}: {formatar_vetor(vetor1)}",
-        "angulo_generico_ideal": f"Ângulo entre {estado1} e Ideal: {angulo(vetor1, ideal):.2f}°",
-        "angulo_generico_x": f"Ângulo com eixo X: {angulo(vetor1, eixo_x):.2f}°",
-        "angulo_generico_y": f"Ângulo com eixo Y: {angulo(vetor1, eixo_y):.2f}°",
-        "angulo_generico_z": f"Ângulo com eixo Z: {angulo(vetor1, eixo_z):.2f}°",
-    }
+    # Vetor ideal
+    "vetor_ideal": f"Ideal: {formatar_vetor(ideal)}",
+
+    # Vetor 1 - Estado/Ano 1
+    "vetor_real_1": f"{estado1} {ano1}: {formatar_vetor(vetor1)}",
+    "angulo_ideal_1": f"Ângulo entre {estado1} e Ideal: {angulo(vetor1, ideal):.2f}°",
+    "angulo_x_1": f"Ângulo com eixo X: {angulo(vetor1, eixo_x):.2f}°",
+    "angulo_y_1": f"Ângulo com eixo Y: {angulo(vetor1, eixo_y):.2f}°",
+    "angulo_z_1": f"Ângulo com eixo Z: {angulo(vetor1, eixo_z):.2f}°",
+
+    # Vetor 2 - Estado/Ano 2
+    "vetor_real_2": f"{estado2} {ano2}: {formatar_vetor(vetor2)}",
+    "angulo_ideal_2": f"Ângulo entre {estado2} e Ideal: {angulo(vetor2, ideal):.2f}°",
+    "angulo_x_2": f"Ângulo com eixo X: {angulo(vetor2, eixo_x):.2f}°",
+    "angulo_y_2": f"Ângulo com eixo Y: {angulo(vetor2, eixo_y):.2f}°",
+    "angulo_z_2": f"Ângulo com eixo Z: {angulo(vetor2, eixo_z):.2f}°",
+}
 
 def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
     import plotly.express as px
@@ -144,7 +164,7 @@ def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
         eq = df_equidade[(df_equidade['Estado'] == estado) & (df_equidade['Ano'] == ano)]['Escala'].sum() or 0
         am = df_ambiental[(df_ambiental['Estado'] == estado) & (df_ambiental['Ano'] == ano)]['Escala'].sum() or 0
         se = df_seguranca[(df_seguranca['Estado'] == estado) & (df_seguranca['Ano'] == ano)]['Escala'].sum() or 0
-        return {"Equidade - eixo x": eq, "Segurança - eixo y": se, "Ambiental - eixo z ": am}
+        return {"Equidade Energetica - eixo x": eq, "Segurança Energetica - eixo y": se, "Meio Ambiente - eixo z ": am}
 
     vetor1 = obter_vetor(estado1, ano1)
     vetor2 = obter_vetor(estado2, ano2) if estado2 and ano2 else None
