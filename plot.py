@@ -22,7 +22,6 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         faces = [[0,1,2], [0,1,3], [0,2,3], [1,2,3]]
         x, y, z = base[:,0], base[:,1], base[:,2]
 
-        # Tetraedro
         mesh = go.Mesh3d(
             x=x, y=y, z=z,
             i=[f[0] for f in faces],
@@ -35,7 +34,6 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
             showscale=False
         )
 
-        # Vértices (sem origem)
         x_filt, y_filt, z_filt, hovers = [], [], [], []
         for i in range(len(x)):
             if not (x[i] == 0 and y[i] == 0 and z[i] == 0):
@@ -57,15 +55,12 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
 
     fig = go.Figure()
 
-    # Tetraedro Ideal
     for trace in gerar_tetraedro("Ideal", "lightgray", ideal, opacidade=0.245):
         fig.add_trace(trace)
 
-    # Estado 1
     for trace in gerar_tetraedro(f"{estado1} {ano1}", "red", vetor1, opacidade=0.3):
         fig.add_trace(trace)
 
-    # Texto com coordenadas do vetor 1
     fig.add_trace(go.Scatter3d(
         x=[vetor1[0]],
         y=[vetor1[1]],
@@ -77,12 +72,10 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         name=f"Coordenadas {estado1}"
     ))
 
-    # Estado 2 (opcional)
     if vetor2:
         for trace in gerar_tetraedro(f"{estado2} {ano2}", "blue", vetor2, opacidade=0.3):
             fig.add_trace(trace)
 
-        # Texto com coordenadas do vetor 2
         fig.add_trace(go.Scatter3d(
             x=[vetor2[0]],
             y=[vetor2[1]],
@@ -94,68 +87,65 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
             name=f"Coordenadas {estado2}"
         ))
 
-    # Layout
     fig.update_layout(
-    scene=dict(
-        xaxis=dict(range=[0, 10], title='Equidade - eixo x'),
-        yaxis=dict(range=[0, 10], title='Segurança - eixo y'),
-        zaxis=dict(range=[0, 10], title='Ambiental - eixo z'),
-        bgcolor="rgba(0,0,0,0)"
-    ),
-    title=dict(
-        text="Comparação de Vetores Trilema",
-        font=dict(
-            family="Arial",     # ou qualquer outra fonte válida (ex: "Courier New", "Verdana")
-            size=22,            # tamanho do título
-            color="black",     # cor do texto
+        scene=dict(
+            xaxis=dict(range=[0, 10], title='Equidade Energética - eixo x'),
+            yaxis=dict(range=[0, 10], title='Segurança Energética - eixo y'),
+            zaxis=dict(range=[0, 10], title='Meio Ambiente - eixo z'),
+            bgcolor="rgba(0,0,0,0)"
         ),
-        x=0.5,                  # centraliza o título horizontalmente
-        xanchor='center',
-    ),
-    width=None,
-    height=700,
-    autosize=True, 
-    showlegend=True,
-    legend=dict(
-        x=0,
-        y=0,
-        xanchor="left",
-        yanchor="bottom",
-        font=dict(size=10),
-        bgcolor='rgba(255,255,255,0.5)',
-        bordercolor='gray',
-        borderwidth=1
-    ),
-    margin=dict(l=0, r=0, t=40, b=0)
+        title=dict(
+            text="Comparação de Vetores Trilema",
+            font=dict(family="Arial", size=24, color="black"),
+            x=0.5,
+            xanchor='center',
+        ),
+        width=None,
+        height=700,
+        autosize=True, 
+        showlegend=True,
+        legend=dict(
+            x=0, y=0,
+            xanchor="left", yanchor="bottom",
+            font=dict(size=10),
+            bgcolor='rgba(255,255,255,0.5)',
+            bordercolor='gray', borderwidth=1
+        ),
+        margin=dict(l=0, r=0, t=40, b=0)
     )
 
-    # Cálculo de ângulos
     def angulo(v1, v2):
         v1, v2 = np.array(v1), np.array(v2)
-        return np.degrees(np.arccos(np.clip(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)), -1, 1)))
+        if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
+            return 0
+        return np.degrees(np.arccos(np.clip(
+            np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)),
+            -1, 1
+        )))
 
     eixo_x, eixo_y, eixo_z = [1,0,0], [0,1,0], [0,0,1]
-    
     def formatar_vetor(v): return f"(x={v[0]:.2f}, y={v[1]:.2f}, z={v[2]:.2f})"
 
-    return fig.to_html(full_html=False, include_plotlyjs='cdn'), {
-    # Vetor ideal
-    "vetor_ideal": f"Ideal: {formatar_vetor(ideal)}",
+    resultado = {
+        "vetor_ideal": f"Ideal: {formatar_vetor(ideal)}",
+        "vetor_real_1": f"{estado1} {ano1}: {formatar_vetor(vetor1)}",
+        "angulo_ideal_1": f"Ângulo entre {estado1} e Ideal: {angulo(vetor1, ideal):.2f}°",
+        "angulo_x_1": f"Ângulo entre {estado1} e eixo X: {angulo(vetor1, eixo_x):.2f}°",
+        "angulo_y_1": f"Ângulo entre {estado1} e eixo Y: {angulo(vetor1, eixo_y):.2f}°",
+        "angulo_z_1": f"Ângulo entre {estado1} e eixo Z: {angulo(vetor1, eixo_z):.2f}°",
+    }
 
-    # Vetor 1 - Estado/Ano 1
-    "vetor_real_1": f"{estado1} {ano1}: {formatar_vetor(vetor1)}",
-    "angulo_ideal_1": f"Ângulo entre {estado1} e Ideal: {angulo(vetor1, ideal):.2f}°",
-    "angulo_x_1": f"Ângulo com eixo X: {angulo(vetor1, eixo_x):.2f}°",
-    "angulo_y_1": f"Ângulo com eixo Y: {angulo(vetor1, eixo_y):.2f}°",
-    "angulo_z_1": f"Ângulo com eixo Z: {angulo(vetor1, eixo_z):.2f}°",
+    if vetor2:
+        resultado.update({
+            "vetor_real_2": f"{estado2} {ano2}: {formatar_vetor(vetor2)}",
+            "angulo_ideal_2": f"Ângulo entre {estado2} e Ideal: {angulo(vetor2, ideal):.2f}°",
+            "angulo_x_2": f"Ângulo entre {estado2} e eixo X: {angulo(vetor2, eixo_x):.2f}°",
+            "angulo_y_2": f"Ângulo entre {estado2} e eixo Y: {angulo(vetor2, eixo_y):.2f}°",
+            "angulo_z_2": f"Ângulo entre {estado2} e eixo Z: {angulo(vetor2, eixo_z):.2f}°",
+        })
 
-    # Vetor 2 - Estado/Ano 2
-    "vetor_real_2": f"{estado2} {ano2}: {formatar_vetor(vetor2)}",
-    "angulo_ideal_2": f"Ângulo entre {estado2} e Ideal: {angulo(vetor2, ideal):.2f}°",
-    "angulo_x_2": f"Ângulo com eixo X: {angulo(vetor2, eixo_x):.2f}°",
-    "angulo_y_2": f"Ângulo com eixo Y: {angulo(vetor2, eixo_y):.2f}°",
-    "angulo_z_2": f"Ângulo com eixo Z: {angulo(vetor2, eixo_z):.2f}°",
-}
+    return fig.to_html(full_html=False, include_plotlyjs='cdn'), resultado
+
 
 def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
     import plotly.express as px
