@@ -5,7 +5,7 @@ import os
 import json
 
 # Ler o arquivo Excel
-df = pd.read_excel('Planilha Geral - Índice Trilema Brasil.xlsx', sheet_name='Trilema energético')
+df = pd.read_excel('Planilha Geral - Índice Trilema Brasil -  Atualizada - (2018-2024) - 0.1.xlsx', sheet_name='Trilema energético')
 
 # ---------------------- Funções de tratamenro ---------------------- #
 
@@ -14,7 +14,7 @@ def tratamento_equidade():
     df_equidade = pd.melt(
         df,
         id_vars=['Região', 'Estado'],
-        value_vars=['Equidade 2018', 'Equidade 2019', 'Equidade 2020', 'Equidade 2021', 'Equidade 2022'],
+        value_vars=['Equidade 2018', 'Equidade 2019', 'Equidade 2020', 'Equidade 2021', 'Equidade 2022', 'Equidade 2023', 'Equidade 2024'],
         var_name='Dimensão',
         value_name='Escala'
     )
@@ -25,7 +25,7 @@ def tratamento_seguranca():
     df_seguranca = pd.melt(
         df,
         id_vars=['Região', 'Estado'],
-        value_vars=['Segurança 2018', 'Segurança 2019', 'Segurança 2020', 'Segurança 2021', 'Segurança 2022'],
+        value_vars=['Segurança 2018', 'Segurança 2019', 'Segurança 2020', 'Segurança 2021', 'Segurança 2022', 'Segurança 2023','Segurança 2024'],
         var_name='Dimensão',
         value_name='Escala'
     )
@@ -37,7 +37,7 @@ def tratamento_ambiental():
     df_ambiental = pd.melt(
         df,
         id_vars=['Região', 'Estado'],
-        value_vars=['Ambiental 2018', 'Ambiental 2019', 'Ambiental 2020', 'Ambiental 2021', 'Ambiental 2022'],
+        value_vars=['Ambiental 2018', 'Ambiental 2019', 'Ambiental 2020', 'Ambiental 2021', 'Ambiental 2022','Ambiental 2023', 'Ambiental 2024'],
         var_name='Dimensão',
         value_name='Escala'
     )
