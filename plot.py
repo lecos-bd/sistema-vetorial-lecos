@@ -88,31 +88,41 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         ))
 
     fig.update_layout(
-        scene=dict(
-            xaxis=dict(range=[0, 10], title='Equidade Energética - eixo x'),
-            yaxis=dict(range=[0, 10], title='Segurança Energética - eixo y'),
-            zaxis=dict(range=[0, 10], title='Meio Ambiente - eixo z'),
-            bgcolor="rgba(0,0,0,0)"
-        ),
-        title=dict(
-            text="Comparação de Vetores Trilema",
-            font=dict(family="Arial", size=24, color="black"),
-            x=0.5,
-            xanchor='center',
-        ),
-        width=None,
-        height=700,
-        autosize=True, 
-        showlegend=True,
-        legend=dict(
-            x=0, y=0,
-            xanchor="left", yanchor="bottom",
-            font=dict(size=10),
-            bgcolor='rgba(255,255,255,0.5)',
-            bordercolor='gray', borderwidth=1
-        ),
-        margin=dict(l=0, r=0, t=40, b=0)
-    )
+    scene=dict(
+        xaxis=dict(range=[0, 10], title='Equidade Energética - eixo x'),
+        yaxis=dict(range=[0, 10], title='Segurança Energética - eixo y'),
+        zaxis=dict(range=[0, 10], title='Meio Ambiente - eixo z'),
+        bgcolor="rgba(0,0,0,0)",
+    ),
+
+    # Definição da câmera (zoom out inicial)
+    scene_camera=dict(
+        eye=dict(x=1.57, y=1.57, z=1.57)  # valores maiores afastam mais
+    ),
+
+    title=dict(
+        text="Comparação de Vetores Trilema",
+        font=dict(family="Arial", size=24, color="black"),
+        x=0.5,
+        xanchor='center',
+    ),
+
+    width=None,
+    height=700,
+    autosize=True, 
+
+    showlegend=True,
+    legend=dict(
+        x=0, y=0,
+        xanchor="left", yanchor="bottom",
+        font=dict(size=10),
+        bgcolor='rgba(255,255,255,0.5)',
+        bordercolor='gray', borderwidth=1
+    ),
+
+    # margem única para evitar cortes
+    margin=dict(l=0, r=0, t=50, b=50)
+)
 
     def angulo(v1, v2):
         v1, v2 = np.array(v1), np.array(v2)
