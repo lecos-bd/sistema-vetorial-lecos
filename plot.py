@@ -7,6 +7,7 @@ df_seguranca = dt.tratamento_seguranca()
 df_equidade = dt.tratamento_equidade()
 
 def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
+
     def obter_vetor(estado, ano):
         eq = df_equidade[(df_equidade['Estado'] == estado) & (df_equidade['Ano'] == ano)]['Escala'].sum() or 0
         am = df_ambiental[(df_ambiental['Estado'] == estado) & (df_ambiental['Ano'] == ano)]['Escala'].sum() or 0
@@ -17,6 +18,7 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
     vetor1 = obter_vetor(estado1, ano1)
     vetor2 = obter_vetor(estado2, ano2) if estado2 and ano2 else None
 
+    # --- TETRAEDRO ---
     def gerar_tetraedro(nome, cor, vetor, opacidade=0.6):
         base = np.array([[0,0,0], [vetor[0],0,0], [0,vetor[1],0], [0,0,vetor[2]]])
         faces = [[0,1,2], [0,1,3], [0,2,3], [1,2,3]]
@@ -30,100 +32,95 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
             color=cor,
             opacity=opacidade,
             name=nome,
-            hoverinfo='name',
-            showscale=False
+            hoverinfo='skip',
+            showscale=False,
+            showlegend=False
         )
 
-        x_filt, y_filt, z_filt, hovers = [], [], [], []
-        for i in range(len(x)):
-            if not (x[i] == 0 and y[i] == 0 and z[i] == 0):
-                x_filt.append(x[i])
-                y_filt.append(y[i])
-                z_filt.append(z[i])
-                hovers.append(f"{nome}<br>x={x[i]:.2f}, y={y[i]:.2f}, z={z[i]:.2f}")
-
+        # Todos os vértices na legenda (inclui a origem também se quiser)
         pontos = go.Scatter3d(
-            x=x_filt, y=y_filt, z=z_filt,
-            mode='markers+text',
+            x=x, y=y, z=z,
+            mode='markers',
             marker=dict(size=4, color=cor),
-            hovertext=hovers,
-            hoverinfo='text',
-            name=f"Vértices {nome}"
+            name=f"Vértices {nome}",
+            legendgroup=nome,
+            showlegend=True,
+            hovertemplate=(
+                f"{nome}<br>" +
+                "x=%{x:.2f}, y=%{y:.2f}, z=%{z:.2f}<extra></extra>"
+            )
         )
 
         return [mesh, pontos]
 
+    # --- VETOR ORIGEM ---
+    def adicionar_vetor_origem(nome, cor, vetor):
+        # Linha + ponto como um único trace → some junto na legenda
+        trace = go.Scatter3d(
+            x=[0, vetor[0]], y=[0, vetor[1]], z=[0, vetor[2]],
+            mode='lines+markers',
+            line=dict(width=6, color=cor),
+            marker=dict(size=6, color=cor),
+            name=f"{nome}",
+            legendgroup=nome,
+            showlegend=True,
+            hovertemplate=(
+                f"{nome}<br>" +
+                "x=%{x:.2f}, y=%{y:.2f}, z=%{z:.2f}<extra></extra>"
+            )
+        )
+        return [trace]
+
     fig = go.Figure()
 
-    for trace in gerar_tetraedro("Ideal", "lightgray", ideal, opacidade=0.245):
-        fig.add_trace(trace)
+    # Ideal
+    for tr in gerar_tetraedro("Ideal", "lightgray", ideal, opacidade=0.20):
+        fig.add_trace(tr)
+    for tr in adicionar_vetor_origem("Ideal", "lightgray", ideal):
+        fig.add_trace(tr)
 
-    for trace in gerar_tetraedro(f"{estado1} {ano1}", "red", vetor1, opacidade=0.3):
-        fig.add_trace(trace)
+    # Estado 1
+    for tr in gerar_tetraedro(f"{estado1} {ano1}", "red", vetor1, opacidade=0.30):
+        fig.add_trace(tr)
+    for tr in adicionar_vetor_origem(f"{estado1} {ano1}", "red", vetor1):
+        fig.add_trace(tr)
 
-    fig.add_trace(go.Scatter3d(
-        x=[vetor1[0]],
-        y=[vetor1[1]],
-        z=[vetor1[2]],
-        mode='text',
-        text=[f"{estado1} {ano1}<br>x: {vetor1[0]:.6f}<br>y: {vetor1[1]:.6f}<br>z: {vetor1[2]:.6f}"],
-        textposition='top right',
-        textfont=dict(color='black', size=12),
-        name=f"Coordenadas {estado1}"
-    ))
-
+    # Estado 2 (opcional)
     if vetor2:
-        for trace in gerar_tetraedro(f"{estado2} {ano2}", "blue", vetor2, opacidade=0.3):
-            fig.add_trace(trace)
+        for tr in gerar_tetraedro(f"{estado2} {ano2}", "blue", vetor2, opacidade=0.30):
+            fig.add_trace(tr)
+        for tr in adicionar_vetor_origem(f"{estado2} {ano2}", "blue", vetor2):
+            fig.add_trace(tr)
 
-        fig.add_trace(go.Scatter3d(
-            x=[vetor2[0]],
-            y=[vetor2[1]],
-            z=[vetor2[2]],
-            mode='text',
-            text=[f"{estado2} {ano2}<br>x: {vetor2[0]:.6f}<br>y: {vetor2[1]:.6f}<br>z: {vetor2[2]:.6f}"],
-            textposition='bottom left',
-            textfont=dict(color='black', size=12),
-            name=f"Coordenadas {estado2}"
-        ))
-
+    # Layout
     fig.update_layout(
-    scene=dict(
-        xaxis=dict(range=[0, 10], title='Equidade Energética - eixo x'),
-        yaxis=dict(range=[0, 10], title='Segurança Energética - eixo y'),
-        zaxis=dict(range=[0, 10], title='Meio Ambiente - eixo z'),
-        bgcolor="rgba(0,0,0,0)",
-    ),
+        scene=dict(
+            xaxis=dict(range=[0, 10], title='Equidade Energética - eixo x'),
+            yaxis=dict(range=[0, 10], title='Segurança Energética - eixo y'),
+            zaxis=dict(range=[0, 10], title='Meio Ambiente - eixo z'),
+            bgcolor="rgba(0,0,0,0)",
+        ),
+        scene_camera=dict(eye=dict(x=1.5, y=1.5, z=1.5)),
+        title=dict(
+            text="Comparação de Vetores Trilema",
+            font=dict(family="Arial", size=24, color="black"),
+            x=0.5, xanchor='center',
+        ),
+        width=None,
+        height=700,
+        autosize=True,
+        showlegend=True,
+        legend=dict(
+            x=0, y=0,
+            xanchor="left", yanchor="bottom",
+            font=dict(size=10),
+            bgcolor='rgba(255,255,255,0.5)',
+            bordercolor='gray', borderwidth=1
+        ),
+        margin=dict(l=0, r=0, t=50, b=50)
+    )
 
-    # Definição da câmera (zoom out inicial)
-    scene_camera=dict(
-        eye=dict(x=1.57, y=1.57, z=1.57)  # valores maiores afastam mais
-    ),
-
-    title=dict(
-        text="Comparação de Vetores Trilema",
-        font=dict(family="Arial", size=24, color="black"),
-        x=0.5,
-        xanchor='center',
-    ),
-
-    width=None,
-    height=700,
-    autosize=True, 
-
-    showlegend=True,
-    legend=dict(
-        x=0, y=0,
-        xanchor="left", yanchor="bottom",
-        font=dict(size=10),
-        bgcolor='rgba(255,255,255,0.5)',
-        bordercolor='gray', borderwidth=1
-    ),
-
-    # margem única para evitar cortes
-    margin=dict(l=0, r=0, t=50, b=50)
-)
-
+    # ---- Métricas e ângulos ----
     def angulo(v1, v2):
         v1, v2 = np.array(v1), np.array(v2)
         if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
@@ -155,6 +152,8 @@ def gerar_grafico(estado1, ano1, estado2=None, ano2=None):
         })
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn'), resultado
+
+
 
 
 def gerar_grafico_radar(estado1, ano1, estado2=None, ano2=None):
