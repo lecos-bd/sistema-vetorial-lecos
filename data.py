@@ -5,7 +5,7 @@ import os
 import json
 
 # Ler o arquivo Excel
-df = pd.read_excel('Novo - Trilema Energético.xlsx', sheet_name='Trilema Energético')
+df = pd.read_excel('Planilha Geral - Índice Trilema Brasil -  Atualizada - (2018-2024) - 0.1.xlsx', sheet_name='Trilema energético')
 
 # ---------------------- Funções de tratamenro ---------------------- #
 
